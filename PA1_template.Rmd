@@ -4,6 +4,7 @@ Reproducible Research: Peer Assessment 1
 ## Loading and preprocessing the data  
 Please make sure you set the "activity.zip" is in the working directory.
 ```{r}
+library(ggplot2)
 unzip("activity.zip")
 data<-read.csv("activity.csv")
 ```
@@ -71,20 +72,86 @@ The number of missin values in this data set is `r number_na`.
 
 2. Devise a strategy for filling in all the missing values in the data. 
 This strategy does not need to be sophisticated. I used means for the five
-minute intervals to replace the missing values.
+minute intervals to replace the missing values. I matched the five minute interval
+and replaced the corresponind steps in the new data set with the average mean
+for accross all days for that 5-minute interval.
 
 3. Create a new dataset that is equal to the original dataset 
-but with the missing data filled in.
+but with the missing data filled in. I also prinited the first ten values of the 
+data set to show that the NA's are gone. 
 ```{r}
 data_3<-data
 for (i in 1:length(na_vector)) {
     if (na_vector[i]==T) {
         data_3$steps[i]<-interval_steps[[as.character(data_3$interval[i])]]
-        
+        data_3$steps[i]<-round(data_3$steps[i],0)
     }
-    
 }
+
+data_3[1:10,]
 ```
 
+4. Make a histogram of the total number of steps taken each day and Calculate and 
+report the mean and median total number of steps taken per day.
+
+```{r Histogram}
+##sum the number of steps per day
+steps<-tapply(data_3$steps,data_3$date,sum)
+##output histograms
+hist(steps,main="Histogram of Number of Steps Taken Each Day",xlab="Steps")
+
+```
+
+```{r Mean/Median}
+mean_steps_2<-mean(steps)
+median_steps_2<-median(steps)
+
+mean_steps_2
+median_steps_2
+```
+
+Yes the new values do have some impact on the estimates of the total daily number
+of steps.   
+```{r Comparison}
+comp_table<-data.frame(c(mean_steps,median_steps),c(mean_steps_2,median_steps_2))
+rownames(comp_table)<-c("mean","median")
+colnames(comp_table)<-c("old","new")
+comp_table
+```
+
+* the new mean is slightly lower then bofore: old -`r mean_steps` vs new 
+`r mean_steps_2`.   
+* the median is also lower: old `r median_steps` vs new `r median_steps_2`
+* getting rid of the missing values did not change the skewness, as the 
+median is lower than the the mean in both cases.That is in both cases
+the distribution is negatively skewed. 
 
 ## Are there differences in activity patterns between weekdays and weekends?
+
+1.Create a new factor variable in the dataset with two levels -- "weekday" 
+and "weekend" indicating whether a given date is a weekday or weekend day.
+
+```{r}
+data_3$date<-weekdays(as.Date(data_3$date))
+day_factor<-as.numeric((data_3$date=="Saturday")|(data_3$date=="Sunday"))
+day_factor<-factor(day_factor,labels=c("Weekday","Weekend"))
+data_3$date<-day_factor
+
+data_4<-aggregate(steps~date+interval,mean,data=data_3)
+```
+
+2.Make a panel plot containing a time series plot (i.e. type = "l") 
+of the 5-minute interval (x-axis) and the average number of steps taken, 
+averaged across all weekday days or weekend days (y-axis). 
+
+```{r}
+
+library(ggplot2)
+ggplot(data=data_4, aes(x=interval, y=steps, group=1)) + geom_line()+facet_grid(date~.)
+
+
+
+
+
+```
+
