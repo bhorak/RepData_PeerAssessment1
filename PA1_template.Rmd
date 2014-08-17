@@ -4,6 +4,8 @@ Reproducible Research: Peer Assessment 1
 ## Loading and preprocessing the data  
 Please make sure you set the "activity.zip" is in the working directory.
 ```{r}
+## initiate ggplott2 for later use
+## unzip data and read it in
 library(ggplot2)
 unzip("activity.zip")
 data<-read.csv("activity.csv")
@@ -12,7 +14,7 @@ data<-read.csv("activity.csv")
 
 ## What is mean total number of steps taken per day?  
 1. Make a histogram of the total number of steps taken each day.
-```{r}
+```{r Histogram_1}
 ##sum the number of steps per day
 steps<-tapply(data$steps,data$date,sum)
 ##output histograms
@@ -20,7 +22,8 @@ hist(steps,main="Histogram of Number of Steps Taken Each Day",xlab="Steps")
 
 ```
 2. Calculate and Report the mean and median total number os steps taken per day.
-```{r}
+```{r Mean/Median_1}
+## find mean/median while ignoriing missing observations
 mean_steps<-mean(steps,na.rm=T)
 median_steps<-median(steps,na.rm=T)
 
@@ -32,13 +35,14 @@ The mean number of steps is `r mean_steps` and the median is `r median_steps`.
 ## What is the average daily activity pattern?  
 1. Make a time series plot of the 5-minute interval (x-axis) and the average 
 number of steps taken, averaged across all days(x-axis).
-```{r}
+```{r Line_Plot_1}
 ## average the steps accross all days
 interval_steps<-tapply(data$steps,data$interval,mean,na.rm=T)
 ##modify the variable to make is suitable for plotting
 data_2<-data.frame(interval_steps)
 data_2$intervals<-rownames(data_2)
 row.names(data_2)=NULL
+## plot the line plot
 plot(data_2$intervals,data_2$interval_steps,type="l",
      main="Average Steps vs. Interval",
       xlab="Interval Identifier",
@@ -48,7 +52,8 @@ plot(data_2$intervals,data_2$interval_steps,type="l",
 2. Which 5-minute interval, on average accross all days in the dataset, 
 contains the maximum number of steps?
 
-```{r}
+```{r Maximum}
+## basic code for finding and printing the max
 max_steps<-max(data_2$interval_steps)
 max_interval<-data_2[data_2$interval_steps==max_steps,2]
 max_steps
@@ -62,9 +67,11 @@ Thus, the interval with the highest average steps is `r max_interval` with
 
 1. Calculate and report the total number of missing values in the dataset.
 
-```{r}
+```{r "NA_find"}
 ##returns True for "NA's" and False for complete observations
 na_vector<-is.na(data$steps)
+## summing the bool vector gives the number of True instances, as True=1 and 
+## False=0
 number_na<-sum(na_vector)
 number_na
 ```
@@ -79,22 +86,27 @@ for accross all days for that 5-minute interval.
 3. Create a new dataset that is equal to the original dataset 
 but with the missing data filled in. I also prinited the first ten values of the 
 data set to show that the NA's are gone. 
-```{r}
+```{r "Fill_in_na's"}
+## initialize a new data frame
 data_3<-data
+## iterate across all rows
 for (i in 1:length(na_vector)) {
+    ## check for NA's
     if (na_vector[i]==T) {
+        ## replace the NA with the correspondin mean of the time interval
         data_3$steps[i]<-interval_steps[[as.character(data_3$interval[i])]]
+        ## round as steps are considered integers
         data_3$steps[i]<-round(data_3$steps[i],0)
     }
 }
-
+## show a bit of data to demonstrate that the NA are indeed gone
 data_3[1:10,]
 ```
 
 4. Make a histogram of the total number of steps taken each day and Calculate and 
 report the mean and median total number of steps taken per day.
 
-```{r Histogram}
+```{r "Histogram_2"}
 ##sum the number of steps per day
 steps<-tapply(data_3$steps,data_3$date,sum)
 ##output histograms
@@ -102,7 +114,8 @@ hist(steps,main="Histogram of Number of Steps Taken Each Day",xlab="Steps")
 
 ```
 
-```{r Mean/Median}
+```{r "Mean/Median_2"}
+## calculate new mean/median - see above
 mean_steps_2<-mean(steps)
 median_steps_2<-median(steps)
 
@@ -112,7 +125,8 @@ median_steps_2
 
 Yes the new values do have some impact on the estimates of the total daily number
 of steps.   
-```{r Comparison}
+```{r "Comparison"}
+## just a little table to see how the values have changed
 comp_table<-data.frame(c(mean_steps,median_steps),c(mean_steps_2,median_steps_2))
 rownames(comp_table)<-c("mean","median")
 colnames(comp_table)<-c("old","new")
@@ -131,12 +145,17 @@ the distribution is negatively skewed.
 1.Create a new factor variable in the dataset with two levels -- "weekday" 
 and "weekend" indicating whether a given date is a weekday or weekend day.
 
-```{r}
+```{r "Factor_var"}
+## convert to date objects
 data_3$date<-weekdays(as.Date(data_3$date))
+## create a numeric vector 0->weekday, 1->weekend
 day_factor<-as.numeric((data_3$date=="Saturday")|(data_3$date=="Sunday"))
+## initiate the factor
 day_factor<-factor(day_factor,labels=c("Weekday","Weekend"))
+## write in the factor into the data frame
 data_3$date<-day_factor
 
+## find the means steps across the factor levels, seperated by interval
 data_4<-aggregate(steps~date+interval,mean,data=data_3)
 ```
 
@@ -144,13 +163,10 @@ data_4<-aggregate(steps~date+interval,mean,data=data_3)
 of the 5-minute interval (x-axis) and the average number of steps taken, 
 averaged across all weekday days or weekend days (y-axis). 
 
-```{r}
+```{r "Line_Plot_2"}
 
-library(ggplot2)
+## use ggplot to plot the two line plots on top of each other
 ggplot(data=data_4, aes(x=interval, y=steps, group=1)) + geom_line()+facet_grid(date~.)
-
-
-
 
 
 ```

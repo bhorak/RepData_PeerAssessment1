@@ -5,6 +5,8 @@ Reproducible Research: Peer Assessment 1
 Please make sure you set the "activity.zip" is in the working directory.
 
 ```r
+## initiate ggplott2 for later use
+## unzip data and read it in
 library(ggplot2)
 unzip("activity.zip")
 data<-read.csv("activity.csv")
@@ -21,10 +23,11 @@ steps<-tapply(data$steps,data$date,sum)
 hist(steps,main="Histogram of Number of Steps Taken Each Day",xlab="Steps")
 ```
 
-![plot of chunk unnamed-chunk-2](figure/unnamed-chunk-2.png) 
+![plot of chunk Histogram_1](figure/Histogram_1.png) 
 2. Calculate and Report the mean and median total number os steps taken per day.
 
 ```r
+## find mean/median while ignoriing missing observations
 mean_steps<-mean(steps,na.rm=T)
 median_steps<-median(steps,na.rm=T)
 
@@ -55,19 +58,21 @@ interval_steps<-tapply(data$steps,data$interval,mean,na.rm=T)
 data_2<-data.frame(interval_steps)
 data_2$intervals<-rownames(data_2)
 row.names(data_2)=NULL
+## plot the line plot
 plot(data_2$intervals,data_2$interval_steps,type="l",
      main="Average Steps vs. Interval",
       xlab="Interval Identifier",
       ylab="Average Steps")
 ```
 
-![plot of chunk unnamed-chunk-4](figure/unnamed-chunk-4.png) 
+![plot of chunk Line_Plot_1](figure/Line_Plot_1.png) 
 
 2. Which 5-minute interval, on average accross all days in the dataset, 
 contains the maximum number of steps?
 
 
 ```r
+## basic code for finding and printing the max
 max_steps<-max(data_2$interval_steps)
 max_interval<-data_2[data_2$interval_steps==max_steps,2]
 max_steps
@@ -96,6 +101,8 @@ Thus, the interval with the highest average steps is 835 with
 ```r
 ##returns True for "NA's" and False for complete observations
 na_vector<-is.na(data$steps)
+## summing the bool vector gives the number of True instances, as True=1 and 
+## False=0
 number_na<-sum(na_vector)
 number_na
 ```
@@ -116,14 +123,19 @@ but with the missing data filled in. I also prinited the first ten values of the
 data set to show that the NA's are gone. 
 
 ```r
+## initialize a new data frame
 data_3<-data
+## iterate across all rows
 for (i in 1:length(na_vector)) {
+    ## check for NA's
     if (na_vector[i]==T) {
+        ## replace the NA with the correspondin mean of the time interval
         data_3$steps[i]<-interval_steps[[as.character(data_3$interval[i])]]
+        ## round as steps are considered integers
         data_3$steps[i]<-round(data_3$steps[i],0)
     }
 }
-
+## show a bit of data to demonstrate that the NA are indeed gone
 data_3[1:10,]
 ```
 
@@ -152,10 +164,11 @@ steps<-tapply(data_3$steps,data_3$date,sum)
 hist(steps,main="Histogram of Number of Steps Taken Each Day",xlab="Steps")
 ```
 
-![plot of chunk Histogram](figure/Histogram.png) 
+![plot of chunk Histogram_2](figure/Histogram_2.png) 
 
 
 ```r
+## calculate new mean/median - see above
 mean_steps_2<-mean(steps)
 median_steps_2<-median(steps)
 
@@ -178,6 +191,7 @@ Yes the new values do have some impact on the estimates of the total daily numbe
 of steps.   
 
 ```r
+## just a little table to see how the values have changed
 comp_table<-data.frame(c(mean_steps,median_steps),c(mean_steps_2,median_steps_2))
 rownames(comp_table)<-c("mean","median")
 colnames(comp_table)<-c("old","new")
@@ -204,11 +218,16 @@ and "weekend" indicating whether a given date is a weekday or weekend day.
 
 
 ```r
+## convert to date objects
 data_3$date<-weekdays(as.Date(data_3$date))
+## create a numeric vector 0->weekday, 1->weekend
 day_factor<-as.numeric((data_3$date=="Saturday")|(data_3$date=="Sunday"))
+## initiate the factor
 day_factor<-factor(day_factor,labels=c("Weekday","Weekend"))
+## write in the factor into the data frame
 data_3$date<-day_factor
 
+## find the means steps across the factor levels, seperated by interval
 data_4<-aggregate(steps~date+interval,mean,data=data_3)
 ```
 
@@ -218,9 +237,9 @@ averaged across all weekday days or weekend days (y-axis).
 
 
 ```r
-library(ggplot2)
+## use ggplot to plot the two line plots on top of each other
 ggplot(data=data_4, aes(x=interval, y=steps, group=1)) + geom_line()+facet_grid(date~.)
 ```
 
-![plot of chunk unnamed-chunk-9](figure/unnamed-chunk-9.png) 
+![plot of chunk Line_Plot_2](figure/Line_Plot_2.png) 
 
