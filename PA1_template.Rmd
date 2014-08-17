@@ -1,20 +1,90 @@
-# Reproducible Research: Peer Assessment 1
+Reproducible Research: Peer Assessment 1
+=========================================
+
+## Loading and preprocessing the data  
+Please make sure you set the "activity.zip" is in the working directory.
+```{r}
+unzip("activity.zip")
+data<-read.csv("activity.csv")
+```
 
 
-## Loading and preprocessing the data
+## What is mean total number of steps taken per day?  
+1. Make a histogram of the total number of steps taken each day.
+```{r}
+##sum the number of steps per day
+steps<-tapply(data$steps,data$date,sum)
+##output histograms
+hist(steps,main="Histogram of Number of Steps Taken Each Day",xlab="Steps")
 
+```
+2. Calculate and Report the mean and median total number os steps taken per day.
+```{r}
+mean_steps<-mean(steps,na.rm=T)
+median_steps<-median(steps,na.rm=T)
 
+mean_steps
+median_steps
+```
+The mean number of steps is `r mean_steps` and the median is `r median_steps`.
 
-## What is mean total number of steps taken per day?
+## What is the average daily activity pattern?  
+1. Make a time series plot of the 5-minute interval (x-axis) and the average 
+number of steps taken, averaged across all days(x-axis).
+```{r}
+## average the steps accross all days
+interval_steps<-tapply(data$steps,data$interval,mean,na.rm=T)
+##modify the variable to make is suitable for plotting
+data_2<-data.frame(interval_steps)
+data_2$intervals<-rownames(data_2)
+row.names(data_2)=NULL
+plot(data_2$intervals,data_2$interval_steps,type="l",
+     main="Average Steps vs. Interval",
+      xlab="Interval Identifier",
+      ylab="Average Steps")
+```
 
+2. Which 5-minute interval, on average accross all days in the dataset, 
+contains the maximum number of steps?
 
+```{r}
+max_steps<-max(data_2$interval_steps)
+max_interval<-data_2[data_2$interval_steps==max_steps,2]
+max_steps
+as.numeric(max_interval)
+```
+ 
+Thus, the interval with the highest average steps is `r max_interval` with 
+`r max_steps` number of steps.
 
-## What is the average daily activity pattern?
+## Imputing missing values  
 
+1. Calculate and report the total number of missing values in the dataset.
 
+```{r}
+##returns True for "NA's" and False for complete observations
+na_vector<-is.na(data$steps)
+number_na<-sum(na_vector)
+number_na
+```
+The number of missin values in this data set is `r number_na`.
 
-## Imputing missing values
+2. Devise a strategy for filling in all the missing values in the data. 
+This strategy does not need to be sophisticated. I used means for the five
+minute intervals to replace the missing values.
 
+3. Create a new dataset that is equal to the original dataset 
+but with the missing data filled in.
+```{r}
+data_3<-data
+for (i in 1:length(na_vector)) {
+    if (na_vector[i]==T) {
+        data_3$steps[i]<-interval_steps[[as.character(data_3$interval[i])]]
+        
+    }
+    
+}
+```
 
 
 ## Are there differences in activity patterns between weekdays and weekends?
