@@ -81,7 +81,8 @@ The number of missin values in this data set is `r number_na`.
 This strategy does not need to be sophisticated. I used means for the five
 minute intervals to replace the missing values. I matched the five minute interval
 and replaced the corresponind steps in the new data set with the average mean
-for accross all days for that 5-minute interval.
+for accross all days for that 5-minute interval. I will also round the values
+since it does not really make sense to have fractional steps.
 
 3. Create a new dataset that is equal to the original dataset 
 but with the missing data filled in. I also prinited the first ten values of the 
